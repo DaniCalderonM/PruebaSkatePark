@@ -2,6 +2,7 @@
 const express = require("express");
 const app = express();
 const exphbs = require("express-handlebars");
+const fs = require("fs");
 const expressFileUpload = require("express-fileupload");
 const jwt = require("jsonwebtoken");
 const { nuevoSkater, getSkaters, getSkater, actualizarSkater, statusSkater, eliminarSkater } = require('./consultas/consultas.js');
@@ -64,34 +65,44 @@ app.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
         const skater = await getSkater(email, password);
-        if (!skater) {
-            return res.status(404).send("Usuario no encontrado");
-        }
 
-        // Si se encuentra el usuario, generar un token JWT
-        const token = jwt.sign(skater, secretKey, { expiresIn: '2m' });
-        console.log("Valor variable token ruta post/login: ", token)
-        res.status(200).send(token);
+        // Si getSkater devuelve un objeto skater, generar un token JWT
+        if (typeof skater === "object") {
+            const token = jwt.sign(skater, secretKey, { expiresIn: '1m' });
+            console.log("Valor variable token ruta post/login: ", token)
+            return res.status(200).send(token);
+        } else {
+            // Si getSkater devuelve un mensaje de error, enviar el mensaje como respuesta
+            console.log("error: ", skater);
+            return res.status(404).send(skater);
+        }
     } catch (e) {
-        // Si ocurre algún error, enviar un mensaje de error
+        // Si ocurre algún error, enviar un mensaje de error genérico
         console.error("error ruta post/login: ", e.message);
         return res.status(500).send({
             error: `Algo salió mal... ${e.message}`,
             code: 500
-        })
+        });
     }
 });
 
 app.get("/perfil", (req, res) => {
-    const { token } = req.query
+    const token = req.query.token
     console.log("Valor variable token ruta get/perfil: ", token)
     jwt.verify(token, secretKey, (err, skater) => {
         if (err) {
-            return res.status(500).send({
-                error: `Algo salió mal...`,
-                message: err.message,
-                code: 500
-            })
+            console.log("valor de err: " + err)
+            if (err.name == 'TokenExpiredError') {
+                // Token expirado
+                return res.status(403).send(`
+            <h1>¡Usuario no autorizado! - Acceso Denegado</h1>
+            <p><b><u>El token ha expirado: ${err.message} (${err.expiredAt.toString().slice(16, 24)} hrs)</u></b></p>`);
+            } else {
+                // Token invalido
+                return res.status(403).send(`
+            <h1>¡Usuario no autorizado! - Acceso Denegado</h1>
+            <p><b><u>El token es invalido: ${err.message}</u></b></p>`);
+            }
         } else {
             res.render("Perfil", { skater });
         }
@@ -138,15 +149,14 @@ app.post("/skaters", async (req, res) => {
         if (!foto) {
             return res.status(400).send("No se encontró ninguna imagen en la solicitud");
         }
-        // Llamar a la función nuevoSkater con los datos del skater
         const respuesta = await nuevoSkater(email, nombre, password, anos_experiencia, especialidad, foto.name);
         console.log("respuesta post skaters: ", respuesta);
 
-        // Obtener la ruta donde se almacenará la foto
-        const pathPhoto = `/uploads/${foto.name}`;
+        // Obtener la ruta donde se almacenara la foto
+        const rutaImagen = `/uploads/${foto.name}`;
 
         // Mover la foto al directorio de uploads
-        foto.mv(`${__dirname}/public${pathPhoto}`);
+        foto.mv(`./public${rutaImagen}`);
 
         // Redireccionar a la página de inicio
         res.status(201).redirect("/");
@@ -193,9 +203,12 @@ app.put("/skaters/status/:id", async (req, res) => {
 app.delete("/skaters/:id", async (req, res) => {
     try {
         const { id } = req.params
-        const respuesta = await eliminarSkater(id);
-        if (typeof respuesta !== "string") {
-            res.status(200).send(respuesta);
+        const skater = await eliminarSkater(id);
+        if (typeof skater !== "string") {
+            const imagen = `./public/uploads/${skater.foto}`;
+            fs.unlinkSync(imagen);
+            console.log(`Imagen del skater con id ${id} eliminada correctamente`);
+            res.status(200).send(skater);
         } else {
             return res.status(400).send("No existe este Skater");
         }
@@ -206,4 +219,3 @@ app.delete("/skaters/:id", async (req, res) => {
         })
     };
 });
-

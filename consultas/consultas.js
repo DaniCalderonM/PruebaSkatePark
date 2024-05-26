@@ -70,26 +70,34 @@ const getSkater = async (email, password) => {
     try {
         // Verificar si se proporcionó el campo rut
         if (!email || !password) {
-            mensaje = "Debe ingresar un email y un password";
+            mensaje = "Debe ingresar los campos email y password";
             console.log(mensaje);
             return mensaje;
         }
 
         const consulta = {
-            text: `SELECT * FROM ${tabla} WHERE email = $1 AND password = $2`,
-            values: [email, password]
+            text: `SELECT * FROM ${tabla} WHERE email = $1`,
+            values: [email]
         };
 
-        const res = await pool.query(consulta);
+        const resultado = await pool.query(consulta);
 
-        // Verificar si se encontro algun skater con el id consultado
-        if (res.rows.length == 0) {
-            mensaje = "Error: No existe el skater consultado o error al ingresar email y contraseña"
-            console.log(mensaje)
+        // Verificar si se encontró algún skater con el email consultado
+        if (resultado.rows.length === 0) {
+            mensaje = "No existe un Skater con ese email";
+            console.log(mensaje);
             return mensaje;
         } else {
-            console.log("Skater consultado: ", res.rows[0]);
-            return res.rows[0];
+            const skater = resultado.rows[0];
+            // Verificar si la contraseña coincide
+            if (skater.password !== password) {
+                mensaje = "Contraseña incorrecta";
+                console.log(mensaje);
+                return mensaje;
+            } else {
+                console.log("Skater consultado: ", skater);
+                return skater;
+            }
         }
     } catch (error) {
         return error.message;

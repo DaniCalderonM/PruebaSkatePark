@@ -6,11 +6,11 @@
     <div class="form-group">
       <div class="form-group">
         <label>Email</label>
-        <input class="form-control w-50 m-auto" />
+        <input class="form-control w-50 m-auto" required />
       </div>
       <div class="form-group">
         <label>Password</label>
-        <input type = "password" class="form-control w-50 m-auto" />
+        <input type = "password" class="form-control w-50 m-auto" required />
       </div>
     </div>
     <button class="btn btn-success mb-3">Ingresar</button>
@@ -34,10 +34,12 @@
       const { data: token } = await axios.post("/login", { email, password })
       window.location = `/Perfil?token=${token}`
     } catch ({ response }) {
+      console.log("valor de response: ", response)
       const { data } = response
-      const { error } = data
-      console.log("error en login.handlebars: ", error)
-      alert(error)
+      console.log("valor de data: ", data)
+      //const { error } = data
+      //console.log("error en login.handlebars: ", error)
+      alert(data)
     }
 
   })
