@@ -9,7 +9,7 @@ const { nuevoSkater, getSkaters, getSkater, actualizarSkater, statusSkater, elim
 const PORT = 3000;
 const secretKey = "ClaveMuySecreta";
 
-// Server
+// Levantar el servidor
 app.listen(PORT, () => {
     console.log(`Servidor Express iniciado en el puerto ${PORT}`);
 });
@@ -18,8 +18,10 @@ app.listen(PORT, () => {
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-
+// Definiendo como carpeta publica a public
 app.use(express.static(__dirname + "/public"));
+
+// Configuracion de expressFileUpload
 app.use(
     expressFileUpload({
         limits: 5000000,
@@ -28,7 +30,10 @@ app.use(
     })
 );
 
+// Definimos rutas de bootstrap
 app.use("/css", express.static(__dirname + "/node_modules/bootstrap/dist/css"));
+
+// Configuramos el motor de plantillas
 app.engine(
     "handlebars",
     exphbs({
@@ -36,9 +41,8 @@ app.engine(
         layoutsDir: `${__dirname}/views/mainLayout`,
     })
 );
-
+// Definimos handlebars como motor de plantillas
 app.set("view engine", "handlebars");
-
 
 // Rutas asociadas a los handlebars
 app.get("/", async (req, res) => {
@@ -53,31 +57,31 @@ app.get("/", async (req, res) => {
     };
 });
 
+// Ruta registro
 app.get("/registro", (req, res) => {
     res.render("Registro");
 });
 
+// Ruta get.login
 app.get("/login", (req, res) => {
     res.render("Login");
 });
 
+// Ruta post.login
 app.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
         const skater = await getSkater(email, password);
 
-        // Si getSkater devuelve un objeto skater, generar un token JWT
         if (typeof skater === "object") {
             const token = jwt.sign(skater, secretKey, { expiresIn: '1m' });
             console.log("Valor variable token ruta post/login: ", token)
             return res.status(200).send(token);
         } else {
-            // Si getSkater devuelve un mensaje de error, enviar el mensaje como respuesta
             console.log("error: ", skater);
             return res.status(404).send(skater);
         }
     } catch (e) {
-        // Si ocurre algún error, enviar un mensaje de error genérico
         console.error("error ruta post/login: ", e.message);
         return res.status(500).send({
             error: `Algo salió mal... ${e.message}`,
@@ -86,9 +90,10 @@ app.post("/login", async (req, res) => {
     }
 });
 
+// Ruta perfil
 app.get("/perfil", (req, res) => {
     const token = req.query.token
-    console.log("Valor variable token ruta get/perfil: ", token)
+    //console.log("Valor variable token ruta get/perfil: ", token)
     jwt.verify(token, secretKey, (err, skater) => {
         if (err) {
             console.log("valor de err: " + err)
@@ -109,7 +114,7 @@ app.get("/perfil", (req, res) => {
     })
 });
 
-
+// Ruta Admin
 app.get("/Admin", async (req, res) => {
     try {
         const skaters = await getSkaters();
@@ -124,11 +129,11 @@ app.get("/Admin", async (req, res) => {
 
 
 // API REST de Skaters
-
+// Ruta get skaters
 app.get("/skaters", async (req, res) => {
     try {
         const respuesta = await getSkaters();
-        console.log("valor de respuesta: ", respuesta)
+        //console.log("valor de respuesta: ", respuesta)
         res.status(200).send(respuesta);
     } catch (e) {
         return res.status(500).send({
@@ -138,6 +143,7 @@ app.get("/skaters", async (req, res) => {
     };
 });
 
+// Ruta post skaters
 app.post("/skaters", async (req, res) => {
     try {
         const { email, nombre, password, anos_experiencia, especialidad } = req.body;
@@ -169,6 +175,7 @@ app.post("/skaters", async (req, res) => {
     }
 });
 
+// Ruta put skaters
 app.put("/skaters", async (req, res) => {
     const { id, nombre, anos_experiencia, especialidad } = req.body;
     //console.log("Valor del body: ", id, nombre, anos_experiencia, especialidad);
@@ -184,6 +191,7 @@ app.put("/skaters", async (req, res) => {
     };
 });
 
+// Ruta put skaters/status/:id
 app.put("/skaters/status/:id", async (req, res) => {
     try {
         const { id } = req.params;
@@ -200,6 +208,7 @@ app.put("/skaters/status/:id", async (req, res) => {
     };
 });
 
+// Ruta delete skaters/:id
 app.delete("/skaters/:id", async (req, res) => {
     try {
         const { id } = req.params
