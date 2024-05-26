@@ -47,7 +47,6 @@ const nuevoSkater = async (email, nombre, password, anos_experiencia, especialid
 const getSkaters = async () => {
     try {
         const consulta = {
-            rowMode: "array",
             text: `SELECT * FROM ${tabla}`
         };
         const resultado = await pool.query(consulta);
@@ -58,6 +57,7 @@ const getSkaters = async () => {
             return mensaje;
         } else {
             console.log(`El registro actual de skaters es ${JSON.stringify(resultado.rows)}`);
+            console.log("resultado.rows get skaters: ", resultado.rows)
             return resultado.rows;
         }
     } catch (error) {
@@ -84,7 +84,7 @@ const getSkater = async (email, password) => {
 
         // Verificar si se encontro algun skater con el id consultado
         if (res.rows.length == 0) {
-            mensaje = "No existe el skater consultado"
+            mensaje = "Error: No existe el skater consultado o error al ingresar email y contraseña"
             console.log(mensaje)
             return mensaje;
         } else {
@@ -116,7 +116,7 @@ const actualizarSkater = async (id, nombre, anos_experiencia, especialidad) => {
             console.log(mensaje);
             return mensaje;
         } else {
-            console.log(`Skater con nombre: ${nombre} actualizado correctamente.`);
+            console.log(`Skater con id: ${id} actualizado correctamente.`);
             return resultado.rows[0];
         }
     } catch (error) {
@@ -128,8 +128,8 @@ const actualizarSkater = async (id, nombre, anos_experiencia, especialidad) => {
 const statusSkater = async (id, estado) => {
     try {
         //Validar que ingresen todos los campos (si se ejecuta en thunder o en postman)
-        if (!id || !estado) {
-            mensaje = "Debe ingresar todos los campos: id y estado";
+        if (!id) {
+            mensaje = "Debe ingresar el campo id";
             console.log(mensaje);
             return mensaje;
         }

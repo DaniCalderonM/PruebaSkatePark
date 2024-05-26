@@ -36,6 +36,7 @@
     } catch ({ response }) {
       const { data } = response
       const { error } = data
+      console.log("error en login.handlebars: ", error)
       alert(error)
     }
 
