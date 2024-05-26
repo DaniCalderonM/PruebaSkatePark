@@ -26,11 +26,11 @@ Las tecnologías y herramientas que deberás ocupar son las siguientes:
 2. Instala las dependencias por la terminal con npm:
 - npm install
 3. Configura las variables de entorno creando un archivo .env en la raíz del proyecto:
-DB_PASSWORD=TuContraseña
-DB_USER=TuUsuario
-DB_DATABASE=NombreDeTuBaseDeDatos
-DB_HOST=TuHost
-DB_PORT=TuPuerto
+- DB_PASSWORD=TuContraseña
+- DB_USER=TuUsuario
+- DB_DATABASE=NombreDeTuBaseDeDatos
+- DB_HOST=TuHost
+- DB_PORT=TuPuerto
 4. Inicia el servidor por la terminal:
 - nodemon index
 
